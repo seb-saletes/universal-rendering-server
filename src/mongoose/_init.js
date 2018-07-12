@@ -1,9 +1,12 @@
 import Mongoose from 'mongoose'
 import List from './list'
 
+const isProd = process.env.NODE_ENV === 'production'
+const mongoUri = isProd ? process.env.MONGODB_URI : 'mongodb://localhost/list'
+
 Mongoose.Promise = global.Promise
 
-Mongoose.connect('mongodb://localhost/list')
+Mongoose.connect(mongoUri)
 
 List.remove({})
 
