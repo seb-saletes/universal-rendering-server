@@ -4,12 +4,15 @@
   "description": "Graphql API with mongodb",
   "main": "server.js",
   "repository": "https://github.com/seb-saletes/individual-project",
+  "engines": {
+    "node": "10.6.0"
+  },
   "scripts": {
     "postinstall": "npm run build",
     "clean": "rm -rf build && mkdir build",
     "build-server": "babel -d ./build ./src -s",
     "build": "npm run clean && npm run build-server",
-    "start:prod": "node ./src/index.js",
+    "start:prod": "node ./build/index.js",
     "start": "nodemon src/index.js --exec babel-node"
   },
   "author": "",
