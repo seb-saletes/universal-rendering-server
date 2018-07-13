@@ -1,10 +1,17 @@
 import Mongoose from 'mongoose'
 
 const cardSchema = Mongoose.Schema({
-  id: Number,
   listId: Number,
   title: String,
   content: String,
+})
+
+cardSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    ret.id = ret._id
+    delete ret._id
+    delete ret.__v
+  },
 })
 
 export {

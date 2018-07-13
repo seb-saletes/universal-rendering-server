@@ -3,11 +3,12 @@ import List from '../../mongoose/list'
 
 const typeDef = gql`
   extend type Query {
-    list(id: Int!): List
+    list(id: String!): List
+    lists: [List]
   }
   
   type List {
-    id: Int!
+    id: String!
     title: String!
     cards: [Card]
   }`
@@ -16,6 +17,7 @@ const typeDef = gql`
 const resolvers = {
   Query: {
     list: (root, args, context) => List.findOne({ id: args.id }).then(o => o),
+    lists: (root, args, context) => List.find({}).then(o => o),
   },
 }
 
