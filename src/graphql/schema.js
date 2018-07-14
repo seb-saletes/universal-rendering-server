@@ -11,8 +11,14 @@ const Query = `
   }
 `
 
+const Mutation = `
+  type Mutation {
+    _empty: String
+  }
+`
+
 const schema = {
-  typeDefs: [Query, List.typeDef, Card.typeDef],
+  typeDefs: [Query, Mutation, List.typeDef, Card.typeDef],
   resolvers: merge({}, List.resolvers, Card.resolvers),
 }
 export default makeExecutableSchema(schema)
