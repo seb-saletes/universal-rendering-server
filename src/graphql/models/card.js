@@ -3,10 +3,10 @@ import { gql } from 'apollo-server'
 const typeDef = gql`
   type Card {
     _id: String!
-    listId: Int!
+    listId: String!
     title: String!
-    content: String
-  }`
+  }
+`
 
 const resolvers = {}
 

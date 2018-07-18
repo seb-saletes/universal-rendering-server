@@ -1,5 +1,7 @@
 import { gql } from 'apollo-server'
+
 import List from '../../mongoose/list'
+import Card from '../../mongoose/card'
 
 const typeDef = gql`
   type List {
@@ -16,8 +18,22 @@ const typeDef = gql`
   extend type Mutation {
     createList(title: String!): List
     deleteList(_id: String!): List
+    createCard(listId: String!, title: String!): Card
+    deleteCard(listId: String!, cardId: String!): Card
+    updateCard(listId: String!, cardId: String!, title: String!): Card
   }
 `
+
+// List.deleteMany({}, () => console.log('lists deleted'))
+// Card.deleteMany({}, () => console.log('cards deleted'))
+// List.find({}).then((lists) => {
+//   console.log('LIST FOUND:', lists)
+// })
+//
+// Card.find({}).then((cards) => {
+//   console.log('CARDS FOUND:', cards)
+// })
+
 const resolvers = {
   Query: {
     lists: (root, args, context) => List.find({}).then(o => o),
@@ -31,7 +47,33 @@ const resolvers = {
       })
     },
     deleteList: (root, args, context) => new Promise((resolve, reject) => {
-      List.findByIdAndRemove(args._id).then(o => resolve(o))
+      List.findByIdAndRemove(args._id).then(list => resolve(list))
+    }),
+    createCard: (root, args, context) => new Promise((resolve, reject) => {
+      const card = new Card({ listId: args.listId, title: args.title })
+      List.update({ _id: args.listId }, { $push: { cards: card } }, err => (err ? reject(err) : resolve(card)))
+    }),
+    deleteCard: (root, args, context) => new Promise((resolve, reject) => {
+      List.findByIdAndUpdate(
+        args.listId,
+        { $pull: { cards: { _id: args.cardId } } },
+        (err, list) => {
+          if (err) reject(err)
+          const card = list.cards.find(c => c._id.toString() === args.cardId)
+          resolve(card)
+        },
+      )
+    }),
+    updateCard: (root, args, context) => new Promise((resolve, reject) => {
+      List.findOneAndUpdate(
+        { _id: args.listId, 'cards._id': args.cardId },
+        { $set: { 'cards.$.title': args.title } },
+        { new: true },
+        (err, list) => {
+          const card = list.cards.find(c => c._id.toString() === args.cardId)
+          resolve(card)
+        },
+      )
     }),
   },
 }
