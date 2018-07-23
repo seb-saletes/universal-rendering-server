@@ -21,18 +21,19 @@ const typeDef = gql`
     createCard(listId: String!, title: String!): Card
     deleteCard(listId: String!, cardId: String!): Card
     updateCard(listId: String!, cardId: String!, title: String!): Card
+    moveCard(listId: String!, targetId: String!, cardId: String!): Card
   }
 `
 
-// List.deleteMany({}, () => console.log('lists deleted'))
-// Card.deleteMany({}, () => console.log('cards deleted'))
-// List.find({}).then((lists) => {
-//   console.log('LIST FOUND:', lists)
-// })
-//
-// Card.find({}).then((cards) => {
-//   console.log('CARDS FOUND:', cards)
-// })
+List.deleteMany({}, () => console.log('lists deleted'))
+Card.deleteMany({}, () => console.log('cards deleted'))
+List.find({}).then((lists) => {
+  console.log('LIST FOUND:', lists)
+})
+
+Card.find({}).then((cards) => {
+  console.log('CARDS FOUND:', cards)
+})
 
 const resolvers = {
   Query: {
@@ -73,6 +74,32 @@ const resolvers = {
           const card = list.cards.find(c => c._id.toString() === args.cardId)
           resolve(card)
         },
+      )
+    }),
+    moveCard: (root, args, context) => new Promise((resolve, reject) => {
+      const card = List.findByIdAndUpdate(
+        args.listId,
+        { $pull: { cards: { _id: args.cardId } } },
+        (err, list) => {
+          if (err) reject(err)
+
+          return list.cards.find(c => c._id.toString() === args.cardId)
+        },
+      )
+
+      console.log('found', card)
+
+      List.update(
+        { _id: args.targetId },
+        {
+          $push: {
+            cards: {
+              $each: [card],
+              $position: 0,
+            },
+          },
+        },
+        err => (err ? reject(err) : resolve(card)),
       )
     }),
   },
