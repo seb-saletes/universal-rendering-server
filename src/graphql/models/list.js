@@ -21,19 +21,19 @@ const typeDef = gql`
     createCard(listId: String!, title: String!): Card
     deleteCard(listId: String!, cardId: String!): Card
     updateCard(listId: String!, cardId: String!, title: String!): Card
-    moveCard(listId: String!, targetId: String!, cardId: String!): Card
+    moveCard(listId: String!, targetId: String!, cardId: String!, position: Int!): Card
   }
 `
 
-List.deleteMany({}, () => console.log('lists deleted'))
-Card.deleteMany({}, () => console.log('cards deleted'))
-List.find({}).then((lists) => {
-  console.log('LIST FOUND:', lists)
-})
-
-Card.find({}).then((cards) => {
-  console.log('CARDS FOUND:', cards)
-})
+// List.deleteMany({}, () => console.log('lists deleted'))
+// Card.deleteMany({}, () => console.log('cards deleted'))
+// List.find({}).then((lists) => {
+//   console.log('LIST FOUND:', lists)
+// })
+//
+// Card.find({}).then((cards) => {
+//   console.log('CARDS FOUND:', cards)
+// })
 
 const resolvers = {
   Query: {
@@ -77,29 +77,28 @@ const resolvers = {
       )
     }),
     moveCard: (root, args, context) => new Promise((resolve, reject) => {
-      const card = List.findByIdAndUpdate(
+      List.findByIdAndUpdate(
         args.listId,
         { $pull: { cards: { _id: args.cardId } } },
         (err, list) => {
           if (err) reject(err)
+          const card = list.cards.find(c => c._id.toString() === args.cardId)
 
-          return list.cards.find(c => c._id.toString() === args.cardId)
-        },
-      )
+          card.listId = args.targetId
 
-      console.log('found', card)
-
-      List.update(
-        { _id: args.targetId },
-        {
-          $push: {
-            cards: {
-              $each: [card],
-              $position: 0,
+          List.update(
+            { _id: args.targetId },
+            {
+              $push: {
+                cards: {
+                  $each: [card],
+                  $position: args.position,
+                },
+              },
             },
-          },
+            errTarget => (errTarget ? reject(errTarget) : resolve(card)),
+          )
         },
-        err => (err ? reject(err) : resolve(card)),
       )
     }),
   },
