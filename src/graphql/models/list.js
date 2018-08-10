@@ -25,7 +25,6 @@ const typeDef = gql`
     moveCard(listId: String!, targetId: String!, cardId: String!, position: Int!): Card
   }
 `
-
 const resolvers = {
   Query: {
     lists: (root, args, context) => new Promise((resolve, reject) => {

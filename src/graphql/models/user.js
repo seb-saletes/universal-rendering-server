@@ -59,10 +59,7 @@ const resolvers = {
 
           if (!passwordIsValid) return reject(new Error('Wrong password'))
 
-          const token = jwt.sign({ id: user._id }, 'HKUST', {
-            expiresIn: '365d',
-          })
-          return resolve(token)
+          return resolve(user.token)
         },
       )
     }),
