@@ -1,4 +1,4 @@
-import { makeExecutableSchema } from 'apollo-server-express'
+import { makeExecutableSchema } from 'apollo-server'
 import { merge } from 'lodash'
 
 import List from './models/list'

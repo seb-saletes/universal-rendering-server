@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-express'
+import { gql } from 'apollo-server'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 

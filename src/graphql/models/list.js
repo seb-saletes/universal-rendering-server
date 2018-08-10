@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-express'
+import { gql } from 'apollo-server'
 
 import User from '../../mongoose/user'
 import List from '../../mongoose/list'
