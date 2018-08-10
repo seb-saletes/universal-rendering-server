@@ -1,5 +1,6 @@
-import { gql } from 'apollo-server'
+import { gql } from 'apollo-server-express'
 
+import User from '../../mongoose/user'
 import List from '../../mongoose/list'
 import Card from '../../mongoose/card'
 
@@ -25,36 +26,41 @@ const typeDef = gql`
   }
 `
 
-// List.deleteMany({}, () => console.log('lists deleted'))
-// Card.deleteMany({}, () => console.log('cards deleted'))
-// List.find({}).then((lists) => {
-//   console.log('LIST FOUND:', lists)
-// })
-//
-// Card.find({}).then((cards) => {
-//   console.log('CARDS FOUND:', cards)
-// })
-
 const resolvers = {
   Query: {
-    lists: (root, args, context) => List.find({}).then(o => o),
+    lists: (root, args, context) => new Promise((resolve, reject) => {
+      User.findOne(
+        { token: context.authtoken },
+        (err, user) => {
+          if (err) return reject(err)
+          if (!user) return reject(new Error('Invalid token.'))
+          return List.find({ user }).then(o => resolve(o))
+        },
+      )
+    }),
   },
   Mutation: {
-    createList: (root, args, context) => {
-      const list = new List({ title: args.title })
+    createList: (root, args, context) => new Promise((resolve, reject) => User.findOne(
+      { token: context.authtoken },
+      (err, user) => {
+        if (err) return reject(err)
+        if (!user) return reject(new Error('Invalid token.'))
+        const list = new List({ title: args.title, user: user._id })
 
-      return new Promise((resolve, reject) => {
-        list.save((err, res) => (err ? reject(err) : resolve(res)))
-      })
-    },
-    deleteList: (root, args, context) => new Promise((resolve, reject) => {
+        return list.save((errList, res) => {
+          if (errList) return reject(err)
+          return resolve(res)
+        })
+      },
+    )),
+    deleteList: (root, args) => new Promise((resolve, reject) => {
       List.findByIdAndRemove(args._id).then(list => resolve(list))
     }),
-    createCard: (root, args, context) => new Promise((resolve, reject) => {
+    createCard: (root, args) => new Promise((resolve, reject) => {
       const card = new Card({ listId: args.listId, title: args.title })
       List.update({ _id: args.listId }, { $push: { cards: card } }, err => (err ? reject(err) : resolve(card)))
     }),
-    deleteCard: (root, args, context) => new Promise((resolve, reject) => {
+    deleteCard: (root, args) => new Promise((resolve, reject) => {
       List.findByIdAndUpdate(
         args.listId,
         { $pull: { cards: { _id: args.cardId } } },
@@ -65,7 +71,7 @@ const resolvers = {
         },
       )
     }),
-    updateCard: (root, args, context) => new Promise((resolve, reject) => {
+    updateCard: (root, args) => new Promise((resolve, reject) => {
       List.findOneAndUpdate(
         { _id: args.listId, 'cards._id': args.cardId },
         { $set: { 'cards.$.title': args.title } },
@@ -76,7 +82,7 @@ const resolvers = {
         },
       )
     }),
-    moveCard: (root, args, context) => new Promise((resolve, reject) => {
+    moveCard: (root, args) => new Promise((resolve, reject) => {
       List.findByIdAndUpdate(
         args.listId,
         { $pull: { cards: { _id: args.cardId } } },
